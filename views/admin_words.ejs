@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kelime Yönetimi • Kelime App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 flex flex-col items-center p-6 pt-24">
+
+  <% if (user) { %>
+  <header class="fixed top-0 left-0 w-full z-50">
+    <div class="glass border-b border-white/15">
+      <div class="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div class="text-white font-extrabold">Kelime App • Admin</div>
+        <div class="flex items-center gap-3">
+          <a href="/" class="text-white/90 hover:underline">Ana Sayfa</a>
+          <a href="/logout" class="rounded-2xl px-4 py-2 font-semibold text-white bg-black/40 hover:bg-black/55 transition shadow">Çıkış</a>
+        </div>
+      </div>
+    </div>
+  </header>
+  <% } %>
+
+  <div class="w-full max-w-3xl mx-auto flex-1 flex items-start justify-center">
+    <div class="glass rounded-3xl p-6 md:p-10 shadow-2xl w-full">
+      <h1 class="text-3xl font-extrabold text-white">Kelime Yönetimi</h1>
+      <p class="text-white/80 mt-1">CRUD işlemleri (Create / Read / Update / Delete)</p>
+
+      <% if (error) { %>
+        <div class="mt-5 rounded-2xl bg-red-500/20 border border-red-200/30 p-4 text-white">
+          <span class="font-semibold">Hata:</span> <%= error %>
+        </div>
+      <% } %>
+
+      <form action="/admin/words" method="POST" class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+        <input name="tr" placeholder="TR (örn: elma)" class="rounded-2xl px-4 py-3 outline-none bg-white/90 focus:bg-white transition shadow"/>
+        <input name="en" placeholder="EN (örn: apple)" class="rounded-2xl px-4 py-3 outline-none bg-white/90 focus:bg-white transition shadow"/>
+        <button class="rounded-2xl px-5 py-3 font-semibold text-white bg-black/40 hover:bg-black/55 transition shadow">
+          Ekle
+        </button>
+      </form>
+
+      <div class="mt-6 rounded-2xl bg-white/10 border border-white/20 overflow-hidden">
+        <div class="px-4 py-3 text-white/80 text-sm border-b border-white/10">Kayıtlı Kelimeler</div>
+        <div class="divide-y divide-white/10">
+          <% words.forEach(w => { %>
+            <div class="px-4 py-3 flex items-center justify-between gap-3">
+              <div class="text-white">
+                <span class="font-bold"><%= w.tr %></span>
+                <span class="text-white/60">/</span>
+                <span class="font-bold"><%= w.en %></span>
+                <span class="text-white/50 text-xs ml-2">#<%= w.id %></span>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <a href="/admin/words/<%= w.id %>/edit"
+                   class="rounded-xl px-3 py-2 text-sm font-semibold text-white bg-black/30 hover:bg-black/45 transition">
+                  Düzenle
+                </a>
+                <form action="/admin/words/<%= w.id %>/delete" method="POST">
+                  <button class="rounded-xl px-3 py-2 text-sm font-semibold text-white bg-red-500/30 hover:bg-red-500/45 transition">
+                    Sil
+                  </button>
+                </form>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
