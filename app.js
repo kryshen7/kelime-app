@@ -15,7 +15,8 @@ const app = express();
 
 // View engine
 app.set("view engine", "ejs");
-app.set("views", path.join(process.cwd(), "views"));
+app.set("views", process.env.NETLIFY ? "/tmp/views" : path.join(process.cwd(), "views"));
+
 
 
 // Body + static
