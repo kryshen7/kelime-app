@@ -1,7 +1,6 @@
 // app.js
 require("dotenv").config();
-require("ejs"); // Netlify 
-
+require("ejs"); // Netlify'da ejs bulunması için
 
 const express = require("express");
 const path = require("path");
@@ -15,14 +14,12 @@ const app = express();
 
 // View engine
 app.set("view engine", "ejs");
+// Netlify Functions ortamında view'lar /tmp/views'e kopyalanıyor
 app.set("views", process.env.NETLIFY ? "/tmp/views" : path.join(process.cwd(), "views"));
-
-
 
 // Body + static
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(process.cwd(), "public")));
-
 
 // session store (MySQL)
 const sessionStore = new MySQLStore(
@@ -56,6 +53,7 @@ function requireAuth(req, res, next) {
   next();
 }
 
+// Basit log helper
 async function logActivity(req, action, detail, user = null) {
   try {
     const ip =
@@ -71,7 +69,6 @@ async function logActivity(req, action, detail, user = null) {
     console.error("logActivity error:", e.message);
   }
 }
-
 
 function detectLang(word) {
   const trChars = /[çğıöşüİ]/i;
@@ -102,10 +99,7 @@ app.post("/register", async (req, res) => {
   }
 
   try {
-    const [exists] = await pool.query(
-      "SELECT id FROM users WHERE email=? LIMIT 1",
-      [email]
-    );
+    const [exists] = await pool.query("SELECT id FROM users WHERE email=? LIMIT 1", [email]);
 
     if (exists.length) {
       return res.render("register", {
@@ -120,14 +114,17 @@ app.post("/register", async (req, res) => {
       [username, email, password_hash]
     );
 
-    req.session.user = { id: user.id, username: user.username, email: user.email };
-await logActivity(req, "login_success", `email=${email}`, req.session.user);
-return res.redirect("/");
+    // ✅ doğru session
+    req.session.user = { id: ins.insertId, username, email };
 
+    // ✅ log
+    await logActivity(req, "login_success", `register email=${email}`, req.session.user);
+
+    return res.redirect("/");
   } catch (err) {
-    console.error(err);
+    console.error("REGISTER ERROR:", err);
     return res.render("register", {
-      error: "Kayıt sırasında hata oluştu.",
+      error: "Kayıt hatası: " + (err?.code || err?.message || "Bilinmeyen hata"),
       form: { username, email },
     });
   }
@@ -144,47 +141,34 @@ app.post("/login", async (req, res) => {
   const password = (req.body.password || "").trim();
 
   if (!email || !password) {
-    return res.render("login", {
-      error: "Email ve şifre gir.",
-      form: { email },
-    });
+    return res.render("login", { error: "Email ve şifre gir.", form: { email } });
   }
 
   try {
-    const [rows] = await pool.query(
-      "SELECT * FROM users WHERE email=? LIMIT 1",
-      [email]
-    );
+    const [rows] = await pool.query("SELECT * FROM users WHERE email=? LIMIT 1", [email]);
 
     if (!rows.length) {
-        await logActivity(req, "login_fail", `email=${email}`, null);
-
-      return res.render("login", {
-        error: "Email veya şifre yanlış.",
-        form: { email },
-      });
+      await logActivity(req, "login_fail", `email=${email}`, null);
+      return res.render("login", { error: "Email veya şifre yanlış.", form: { email } });
     }
 
     const user = rows[0];
     const ok = await bcrypt.compare(password, user.password_hash);
 
     if (!ok) {
-        await logActivity(req, "login_fail", `email=${email}`, null);
-
-      return res.render("login", {
-        error: "Email veya şifre yanlış.",
-        form: { email },
-      });
+      await logActivity(req, "login_fail", `email=${email}`, null);
+      return res.render("login", { error: "Email veya şifre yanlış.", form: { email } });
     }
 
     req.session.user = { id: user.id, username: user.username, email: user.email };
+
+    // ✅ login success log
+    await logActivity(req, "login_success", `email=${email}`, req.session.user);
+
     return res.redirect("/");
   } catch (err) {
-    console.error(err);
-    return res.render("login", {
-      error: "Giriş sırasında hata oluştu.",
-      form: { email },
-    });
+    console.error("LOGIN ERROR:", err);
+    return res.render("login", { error: "Giriş sırasında hata oluştu.", form: { email } });
   }
 });
 
@@ -259,8 +243,9 @@ app.post("/admin/words/:id/delete", requireAuth, async (req, res) => {
 app.post("/search", requireAuth, async (req, res) => {
   const queryRaw = (req.body.word || "").trim();
   const query = queryRaw.toLowerCase();
-  await logActivity(req, "search", `q=${queryRaw}`, req.session.user);
 
+  // ✅ arama logu
+  await logActivity(req, "search", `q=${queryRaw}`, req.session.user);
 
   if (!query) {
     return res.render("index", { result: null, error: "Lütfen bir kelime gir.", query: "" });
@@ -279,7 +264,7 @@ app.post("/search", requireAuth, async (req, res) => {
       );
 
       const sugText = suggestions.length
-        ? "Bunu mu demek istedin: " + suggestions.map(s => `${s.tr} / ${s.en}`).join(", ")
+        ? "Bunu mu demek istedin: " + suggestions.map((s) => `${s.tr} / ${s.en}`).join(", ")
         : "Bu kelime veritabanında yok.";
 
       return res.render("index", { result: null, error: sugText, query: queryRaw });
@@ -306,7 +291,11 @@ app.post("/search", requireAuth, async (req, res) => {
       );
     }
 
-    const example = exRows.length ? exRows[0].sentence : "Örnek cümle bulunamadı.";
+    const example = exRows.length
+      ? exRows[0].sentence
+      : (inputLang === "tr"
+          ? `Bugün "${word.tr}" kelimesini öğrendim.`
+          : `Today I learned the word "${word.en}".`);
 
     return res.render("index", {
       result: { input: queryRaw, inputLang, tr: word.tr, en: word.en, translation, example },
@@ -314,17 +303,17 @@ app.post("/search", requireAuth, async (req, res) => {
       query: queryRaw,
     });
   } catch (err) {
-    console.error(err);
+    console.error("SEARCH ERROR:", err);
     return res.render("index", { result: null, error: "Sunucu hatası oluştu.", query: queryRaw });
   }
 });
 
+// Admin - Logs
 app.get("/admin/logs", requireAuth, async (req, res) => {
   const [logs] = await pool.query(
     "SELECT id, username, action, detail, ip, created_at FROM activity_logs ORDER BY id DESC LIMIT 200"
   );
   res.render("admin_logs", { logs });
 });
-
 
 module.exports = app;
