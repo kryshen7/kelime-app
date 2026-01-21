@@ -2,6 +2,7 @@ const serverless = require("serverless-http");
 const fs = require("fs");
 const path = require("path");
 
+
 // views klasörünü function içinde /tmp'ye kopyala (read-only /var/task yerine)
 function copyDir(src, dest) {
   fs.mkdirSync(dest, { recursive: true });
