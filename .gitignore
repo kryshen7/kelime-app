@@ -1,2 +1,4 @@
 node_modules/
 .env
+netlify/functions/public/
+netlify/functions/views/
