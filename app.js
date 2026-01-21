@@ -56,6 +56,23 @@ function requireAuth(req, res, next) {
   next();
 }
 
+async function logActivity(req, action, detail, user = null) {
+  try {
+    const ip =
+      req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      null;
+
+    await pool.query(
+      "INSERT INTO activity_logs (user_id, username, action, detail, ip) VALUES (?, ?, ?, ?, ?)",
+      [user?.id || null, user?.username || null, action, detail, ip]
+    );
+  } catch (e) {
+    console.error("logActivity error:", e.message);
+  }
+}
+
+
 function detectLang(word) {
   const trChars = /[çğıöşüİ]/i;
   return trChars.test(word) ? "tr" : "en";
@@ -103,8 +120,10 @@ app.post("/register", async (req, res) => {
       [username, email, password_hash]
     );
 
-    req.session.user = { id: ins.insertId, username, email };
-    return res.redirect("/");
+    req.session.user = { id: user.id, username: user.username, email: user.email };
+await logActivity(req, "login_success", `email=${email}`, req.session.user);
+return res.redirect("/");
+
   } catch (err) {
     console.error(err);
     return res.render("register", {
@@ -138,6 +157,8 @@ app.post("/login", async (req, res) => {
     );
 
     if (!rows.length) {
+        await logActivity(req, "login_fail", `email=${email}`, null);
+
       return res.render("login", {
         error: "Email veya şifre yanlış.",
         form: { email },
@@ -148,6 +169,8 @@ app.post("/login", async (req, res) => {
     const ok = await bcrypt.compare(password, user.password_hash);
 
     if (!ok) {
+        await logActivity(req, "login_fail", `email=${email}`, null);
+
       return res.render("login", {
         error: "Email veya şifre yanlış.",
         form: { email },
@@ -236,6 +259,8 @@ app.post("/admin/words/:id/delete", requireAuth, async (req, res) => {
 app.post("/search", requireAuth, async (req, res) => {
   const queryRaw = (req.body.word || "").trim();
   const query = queryRaw.toLowerCase();
+  await logActivity(req, "search", `q=${queryRaw}`, req.session.user);
+
 
   if (!query) {
     return res.render("index", { result: null, error: "Lütfen bir kelime gir.", query: "" });
