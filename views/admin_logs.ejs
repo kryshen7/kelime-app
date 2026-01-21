@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Loglar</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>Son 200 Log</h2>
+    <table style="width:100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th style="text-align:left; border-bottom:1px solid #ddd; padding:8px;">Tarih</th>
+          <th style="text-align:left; border-bottom:1px solid #ddd; padding:8px;">Kullanıcı</th>
+          <th style="text-align:left; border-bottom:1px solid #ddd; padding:8px;">İşlem</th>
+          <th style="text-align:left; border-bottom:1px solid #ddd; padding:8px;">Detay</th>
+          <th style="text-align:left; border-bottom:1px solid #ddd; padding:8px;">IP</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% logs.forEach(l => { %>
+          <tr>
+            <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><%= l.created_at %></td>
+            <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><%= l.username || "-" %></td>
+            <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><%= l.action %></td>
+            <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><%= l.detail || "-" %></td>
+            <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><%= l.ip || "-" %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

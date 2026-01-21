@@ -319,4 +319,12 @@ app.post("/search", requireAuth, async (req, res) => {
   }
 });
 
+app.get("/admin/logs", requireAuth, async (req, res) => {
+  const [logs] = await pool.query(
+    "SELECT id, username, action, detail, ip, created_at FROM activity_logs ORDER BY id DESC LIMIT 200"
+  );
+  res.render("admin_logs", { logs });
+});
+
+
 module.exports = app;
