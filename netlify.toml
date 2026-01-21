@@ -7,3 +7,7 @@
   from = "/*"
   to = "/.netlify/functions/api/:splat"
   status = 200
+
+[functions]
+  included_files = ["views/**", "public/**"]
+  external_node_modules = ["ejs"]
