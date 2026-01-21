@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
@@ -6,64 +6,74 @@
   <title>Kelime App</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
-<body>
 
+<body>
   <% if (user) { %>
-    <div style="width:100%; padding:16px 20px; box-sizing:border-box;">
-      <div style="max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between;">
-        <div style="color:white; font-weight:700;">
-          Merhaba, <%= user.username %> 👋
+    <div class="topbar">
+      <div class="wrap glass">
+        <div>
+          <div class="mini">Hesap</div>
+          <div class="user">Merhaba, <%= user.username %> </div>
         </div>
-        <div style="display:flex; gap:12px; align-items:center;">
-          <a href="/logout" style="color:white; font-weight:700; text-decoration:none;">Çıkış</a>
-        </div>
+        <a href="/logout">Çıkış</a>
       </div>
     </div>
   <% } %>
 
-  <div style="max-width:1100px; margin:0 auto; padding:30px 20px; box-sizing:border-box;">
-    <div style="max-width:720px; margin:0 auto;">
-      <h1 style="color:white; margin:0 0 8px;">Kelime App</h1>
-      <p style="color:rgba(255,255,255,.85); margin:0 0 18px;">TR ↔ EN çeviri + random örnek cümle</p>
+  <div class="page">
+    <div class="container glass">
+      <div class="header">
+        <div>
+          <h1 class="h-title">Kelime App</h1>
+          <p class="h-sub">TR ↔ EN çeviri + random örnek cümle</p>
+        </div>
+        <div class="badge">Node.js • MySQL</div>
+      </div>
 
-      <form action="/search" method="POST" style="display:flex; gap:10px; align-items:center;">
-        <input
-          type="text"
-          name="word"
-          placeholder="Örn: elma / apple"
-          value="<%= query || '' %>"
-          style="flex:1; padding:14px 16px; border-radius:14px; border:none; outline:none;"
-        />
-        <button type="submit" style="padding:12px 18px; border-radius:14px; border:none; cursor:pointer; font-weight:700;">
-          Bul
-        </button>
+      <form action="/search" method="POST" class="form">
+        <label class="label">Kelime gir</label>
+        <div class="row">
+          <input
+            class="input"
+            type="text"
+            name="word"
+            placeholder="Örn: elma / apple"
+            value="<%= query || '' %>"
+          />
+          <button class="btn" type="submit">Bul</button>
+        </div>
       </form>
 
       <% if (error) { %>
-        <div style="margin-top:14px; padding:14px 16px; border-radius:14px; background:rgba(0,0,0,.25); color:white;">
-          <b>Hata:</b> <%= error %>
-        </div>
+        <div class="alert"><b>Hata:</b> <%= error %></div>
       <% } %>
 
       <% if (result) { %>
-        <div style="margin-top:16px; padding:16px; border-radius:16px; background:rgba(255,255,255,.12); color:white;">
-          <div style="font-weight:800; font-size:18px; margin-bottom:8px;">
-            <%= result.input %> → <%= result.translation %>
+        <div class="grid">
+          <div class="card">
+            <div class="muted">Girdiğin kelime</div>
+            <div class="big"><%= result.input %></div>
+            <div class="muted">Dil: <b><%= (result.inputLang || "").toUpperCase() %></b></div>
           </div>
-          <div style="opacity:.95; margin-bottom:10px;">
-            TR: <b><%= result.tr %></b> | EN: <b><%= result.en %></b>
+
+          <div class="card">
+            <div class="muted">Çeviri</div>
+            <div class="big"><%= result.translation %></div>
+            <div class="muted">TR: <b><%= result.tr %></b></div>
+            <div class="muted">EN: <b><%= result.en %></b></div>
           </div>
-          <div style="opacity:.95;">
-            <b>Örnek:</b> <%= result.example %>
+
+          <div class="card full">
+            <div class="muted">Random örnek cümle</div>
+            <div class="example">“<%= result.example %>”</div>
           </div>
         </div>
       <% } %>
 
-      <p style="margin-top:18px; color:rgba(255,255,255,.7);">
-        İpucu: Admin panelden yeni kelime/cümle ekleyebilirsin.
-      </p>
+      <div class="tip">
+        İpucu: Admin panelden yeni kelime ve cümle ekleyerek büyütebilirsin.
+      </div>
     </div>
   </div>
-
 </body>
 </html>
